@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Manajemen Data Mahasiswa</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- KODE CSS DITEMPELKAN DI SINI -->
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --danger-color: #dc3545;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --sidebar-bg: #2c3e50;
+            --sidebar-text: #ecf0f1;
+            --sidebar-width: 250px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            /* Tidak ada layout khusus di body */
+        }
+
+        /* --- Login View (TERPISAH) --- */
+        #login-view {
+            display: flex; /* Tampilan default */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--light-color);
+        }
+        
+        /* SEMBUNYIKAN login view saat sudah login */
+        body.logged-in #login-view {
+            display: none;
+        }
+
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .login-card h2 {
+            margin-bottom: 25px;
+            color: var(--primary-color);
+        }
+        .login-card .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .login-card .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* --- Aplikasi Utama (TERPISAH) --- */
+        #app-content-wrapper {
+            display: none; /* Sembunyikan secara default */
+        }
+
+        /* TAMPILKAN aplikasi utama saat sudah login */
+        body.logged-in #app-content-wrapper {
+            display: block;
+        }
+        
+        .app-container {
+            display: flex; /* Layout Flexbox yang sederhana dan stabil */
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            flex-shrink: 0; /* Mencegah sidebar menyusut */
+        }
+
+        .sidebar h1 {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            text-align: center;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 15px;
+        }
+
+        .menu-item {
+            display: block;
+            padding: 15px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background-color: var(--primary-color);
+        }
+
+        .menu-item i {
+            margin-right: 10px;
+        }
+
+        /* --- Main Content --- */
+        .main-content {
+            flex-grow: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        .card {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: var(--dark-color);
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        /* --- Forms --- */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .form-group small {
+            color: #888;
+            font-size: 0.85em;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* --- Buttons --- */
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        /* --- Table --- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        thead th {
+            background-color: var(--light-color);
+            font-weight: bold;
+        }
+
+        tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* --- Search & Sort Controls --- */
+        .search-controls, .sort-controls {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+            margin-bottom: 20px;
+        }
+
+        .search-controls input {
+            flex-grow: 1;
+        }
+
+        #search-results {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            min-height: 50px;
+        }
+    </style>
+</head>
+<body> <!-- Tidak ada class awal -->
+
+    <!-- View 0: Login (DI LUAR WRAPPER) -->
+    <section id="login-view" class="view active">
+        <div class="login-card">
+            <h2>Silakan Login</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Wrapper untuk seluruh aplikasi (DISEMBUNYIKAN AWALNYA) -->
+    <div id="app-content-wrapper">
+        <div class="app-container">
+            <!-- Sidebar untuk Navigasi -->
+            <aside class="sidebar">
+                <h1><i class="fas fa-user-graduate"></i> Manajemen Mahasiswa</h1>
+                <nav class="menu">
+                    <a href="#" id="view-form" class="menu-item"><i class="fas fa-plus-circle"></i> Tambah Mahasiswa</a>
+                    <a href="#" id="view-list" class="menu-item"><i class="fas fa-list"></i> Lihat Data</a>
+                    <a href="#" id="action-search" class="menu-item"><i class="fas fa-search"></i> Cari Data</a>
+                    <a href="#" id="action-sort" class="menu-item"><i class="fas fa-sort"></i> Urutkan Data</a>
+                    <a href="#" id="action-logout" class="menu-item" style="margin-top: auto; background-color: var(--danger-color);"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </nav>
+            </aside>
+
+            <!-- Konten Utama -->
+            <main class="main-content">
+                <!-- View 1: Form Tambah/Edit Mahasiswa -->
+                <section id="form-view" class="view">
+                    <div class="card">
+                        <h2 id="form-title">Tambah Mahasiswa Baru</h2>
+                        <form id="student-form">
+                            <input type="hidden" id="student-id">
+                            <div class="form-group">
+                                <label for="nim">NIM</label>
+                                <input type="text" id="nim" placeholder="Contoh: 102234045678" required>
+                                <small>Format: 12 digit angka.</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="nama">Nama Lengkap</label>
+                                <input type="text" id="nama" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="jurusan">Jurusan</label>
+                                <input type="text" id="jurusan" required>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> <span id="submit-btn-text">Simpan</span>
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="cancel-edit" style="display:none;">Batal</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- View 2: Tabel Data Mahasiswa -->
+                <section id="list-view" class="view">
+                    <div class="card">
+                        <h2>Daftar Mahasiswa</h2>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>NIM</th>
+                                    <th>Nama</th>
+                                    <th>Email</th>
+                                    <th>Jurusan</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="student-list-body">
+                                <!-- Baris data mahasiswa akan di-generate oleh JavaScript -->
+                            </tbody>
+                        </table>
+                        <p id="empty-message" style="display: none; text-align: center; margin-top: 20px;">Belum ada data mahasiswa.</p>
+                    </div>
+                </section>
+                
+                <!-- View 3: Pencarian -->
+                <section id="search-view" class="view">
+                    <div class="card">
+                        <h2>Cari Mahasiswa</h2>
+                        <div class="search-controls">
+                            <input type="text" id="search-input" placeholder="Masukkan NIM atau Nama...">
+                            <button id="btn-linear-search" class="btn btn-primary">Linear Search</button>
+                            <button id="btn-binary-search" class="btn btn-primary">Binary Search (NIM)</button>
+                        </div>
+                        <div id="search-results">
+                            <!-- Hasil pencarian akan ditampilkan di sini -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- View 4: Pengurutan -->
+                <section id="sort-view" class="view">
+                    <div class="card">
+                        <h2>Urutkan Data Mahasiswa</h2>
+                        <form id="sort-form" class="sort-controls">
+                            <div class="form-group">
+                                <label for="sort-field">Urutkan berdasarkan:</label>
+                                <select id="sort-field" required>
+                                    <option value="">-- Pilih Bidang --</option>
+                                    <option value="nim">NIM</option>
+                                    <option value="nama">Nama</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="sort-method">Metode dan Arah:</label>
+                                <select id="sort-method" required>
+                                    <option value="">-- Pilih Metode --</option>
+                                    <option value="bubble-asc">Bubble Sort (Ascending)</option>
+                                    <option value="bubble-desc">Bubble Sort (Descending)</option>
+                                    <option value="merge-asc">Merge Sort (Ascending)</option>
+                                    <option value="merge-desc">Merge Sort (Descending)</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Urutkan Sekarang</button>
+                        </form>
+                        <small id="sort-message"></small>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- KODE JAVASCRIPT DITEMPELKAN DI SINI -->
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- KELAS-KELAS (IMPLEMENTASI OOP) ---
+        class Person {
+            constructor(nama, email) { this._nama = nama; this._email = email; }
+            get nama() { return this._nama; }
+            get email() { return this._email; }
+        }
+
+        class Mahasiswa extends Person {
+            constructor(nim, nama, email, jurusan) {
+                super(nama, email);
+                this.nim = nim;
+                this.jurusan = jurusan;
+            }
+            getInfo() { return `NIM: ${this.nim}, Nama: ${this.nama}, Email: ${this.email}, Jurusan: ${this.jurusan}`; }
+        }
+        
+        // --- KELAS APLIKASI UTAMA ---
+        class ManajemenMahasiswaApp {
+            constructor() {
+                this.USERNAME = "Vina Aulia";
+                this.PASSWORD = "241011401650";
+                this.daftarMahasiswa = [];
+                this.editingId = null;
+                this.isLoggedIn = false;
+                this.bodyElement = document.body;
+
+                this.elements = {
+                    loginView: document.getElementById('login-view'), loginForm: document.getElementById('login-form'),
+                    formView: document.getElementById('form-view'), listView: document.getElementById('list-view'), searchView: document.getElementById('search-view'), sortView: document.getElementById('sort-view'),
+                    studentForm: document.getElementById('student-form'), studentListBody: document.getElementById('student-list-body'), emptyMessage: document.getElementById('empty-message'),
+                    formTitle: document.getElementById('form-title'), submitBtnText: document.getElementById('submit-btn-text'), cancelEditBtn: document.getElementById('cancel-edit'),
+                    searchInput: document.getElementById('search-input'), searchResults: document.getElementById('search-results'),
+                    sortForm: document.getElementById('sort-form'), sortMessage: document.getElementById('sort-message')
+                };
+                this.init();
+            }
+
+            init() {
+                this.loadData();
+                this.setupEventListeners();
+                this.showView('login');
+            }
+
+            setupEventListeners() {
+                this.elements.loginForm.addEventListener('submit', (e) => this.handleLogin(e));
+                document.getElementById('action-logout').addEventListener('click', () => this.logout());
+
+                document.getElementById('view-form').addEventListener('click', (e) => this.showView('form', e));
+                document.getElementById('view-list').addEventListener('click', (e) => this.showView('list', e));
+                document.getElementById('action-search').addEventListener('click', (e) => this.showView('search', e));
+                document.getElementById('action-sort').addEventListener('click', (e) => this.showView('sort', e));
+                
+                this.elements.studentForm.addEventListener('submit', (e) => this.handleFormSubmit(e));
+                this.elements.cancelEditBtn.addEventListener('click', () => this.cancelEdit());
+                this.elements.studentListBody.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('btn-edit')) this.editMahasiswa(e.target.dataset.id);
+                    else if (e.target.classList.contains('btn-delete')) this.hapusMahasiswa(e.target.dataset.id);
+                });
+
+                document.getElementById('btn-linear-search').addEventListener('click', () => this.cariLinear());
+                document.getElementById('btn-binary-search').addEventListener('click', () => this.cariBinary());
+                this.elements.sortForm.addEventListener('submit', (e) => this.handleSortSubmit(e));
+            }
+
+            // --- FITUR LOGIN & LOGOUT ---
+            handleLogin(event) {
+                event.preventDefault();
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+
+                if (username === this.USERNAME && password === this.PASSWORD) {
+                    this.isLoggedIn = true;
+                    alert('Login berhasil!');
+                    this.elements.loginForm.reset();
+                    this.bodyElement.classList.add('logged-in');
+                    this.showView('list');
+                } else {
+                    alert('Username atau Password salah!');
+                }
+            }
+
+            logout() {
+                if (confirm('Apakah Anda yakin ingin logout?')) {
+                    this.isLoggedIn = false;
+                    this.bodyElement.classList.remove('logged-in');
+                    this.showView('login');
+                }
+            }
+
+            // --- LOGIKA UI ---
+            showView(viewName, event) {
+                if (event) event.preventDefault();
+                if (!this.isLoggedIn && viewName !== 'login') {
+                    this.showView('login');
+                    return;
+                }
+                
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+
+                if (viewName === 'login') {
+                    this.elements.loginView.classList.add('active');
+                } else {
+                    this.elements[`${viewName}View`].classList.add('active');
+                    document.getElementById(`view-${viewName}`).classList.add('active');
+                    if(viewName === 'list') this.render();
+                }
+            }
+
+            // --- FITUR FILE I/O (LOCAL STORAGE) ---
+            saveData() { try { localStorage.setItem('mahasiswaData', JSON.stringify(this.daftarMahasiswa)); } catch (e) { alert('Gagal menyimpan data.'); console.error(e); } }
+            loadData() { try { const data = localStorage.getItem('mahasiswaData'); if (data) this.daftarMahasiswa = JSON.parse(data).map(m => new Mahasiswa(m.nim, m.nama, m.email, m.jurusan)); } catch (e) { alert('Gagal memuat data.'); console.error(e); this.daftarMahasiswa = []; } }
+
+            // --- FITUR VALIDASI (REGEX) ---
+            validateNIM(nim) { const regex = /^\d{12}$/; return regex.test(nim); }
+            validateEmail(email) { const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/; return regex.test(email); }
+            
+            render() {
+                if (this.daftarMahasiswa.length === 0) { this.elements.studentListBody.innerHTML = ''; this.elements.emptyMessage.style.display = 'block'; }
+                else {
+                    this.elements.emptyMessage.style.display = 'none';
+                    this.elements.studentListBody.innerHTML = this.daftarMahasiswa.map(mhs => `
+                        <tr><td>${mhs.nim}</td><td>${mhs.nama}</td><td>${mhs.email}</td><td>${mhs.jurusan}</td>
+                        <td><button class="btn btn-primary btn-edit" data-id="${mhs.nim}">Edit</button><button class="btn btn-danger btn-delete" data-id="${mhs.nim}">Hapus</button></td></tr>`).join('');
+                }
+            }
+
+            // --- FITUR CRUD ---
+            handleFormSubmit(event) {
+                event.preventDefault();
+                const nim = document.getElementById('nim').value, nama = document.getElementById('nama').value, email = document.getElementById('email').value, jurusan = document.getElementById('jurusan').value;
+                try {
+                    if (!this.validateNIM(nim)) throw new Error('Format NIM tidak valid. Harus 12 digit angka.');
+                    if (!this.validateEmail(email)) throw new Error('Format email tidak valid.');
+                    if (this.editingId) {
+                        const index = this.daftarMahasiswa.findIndex(m => m.nim === this.editingId);
+                        if (index !== -1) { this.daftarMahasiswa[index] = { nim, nama, email, jurusan }; alert('Data berhasil diperbarui!'); }
+                        this.cancelEdit();
+                    } else {
+                        if (this.daftarMahasiswa.some(m => m.nim === nim)) throw new Error(`Mahasiswa dengan NIM ${nim} sudah ada.`);
+                        this.daftarMahasiswa.push(new Mahasiswa(nim, nama, email, jurusan));
+                        alert('Mahasiswa baru berhasil ditambahkan!');
+                    }
+                    this.saveData(); this.elements.studentForm.reset(); this.showView('list');
+                } catch (error) { alert(`Error: ${error.message}`); }
+            }
+
+            editMahasiswa(nim) {
+                const mahasiswa = this.daftarMahasiswa.find(m => m.nim === nim);
+                if (mahasiswa) {
+                    this.editingId = nim;
+                    document.getElementById('nim').value = mahasiswa.nim; document.getElementById('nama').value = mahasiswa.nama;
+                    document.getElementById('email').value = mahasiswa.email; document.getElementById('jurusan').value = mahasiswa.jurusan;
+                    this.elements.formTitle.textContent = 'Edit Data Mahasiswa'; this.elements.submitBtnText.textContent = 'Perbarui';
+                    this.elements.cancelEditBtn.style.display = 'inline-block'; document.getElementById('nim').disabled = true;
+                    this.showView('form');
+                }
+            }
+
+            cancelEdit() {
+                this.editingId = null; this.elements.studentForm.reset(); this.elements.formTitle.textContent = 'Tambah Mahasiswa Baru';
+                this.elements.submitBtnText.textContent = 'Simpan'; this.elements.cancelEditBtn.style.display = 'none'; document.getElementById('nim').disabled = false;
+            }
+
+            hapusMahasiswa(nim) {
+                if (confirm(`Hapus data dengan NIM ${nim}?`)) {
+                    const index = this.daftarMahasiswa.findIndex(m => m.nim === nim);
+                    if (index !== -1) { this.daftarMahasiswa.splice(index, 1); this.saveData(); this.render(); alert('Data berhasil dihapus.'); }
+                }
+            }
+
+            // --- FITUR PENCARIAN ---
+            cariLinear() {
+                const keyword = this.elements.searchInput.value.trim().toLowerCase();
+                if (!keyword) { alert('Masukkan kata kunci.'); return; }
+                const hasil = this.daftarMahasiswa.filter(mhs => mhs.nim.includes(keyword) || mhs.nama.toLowerCase().includes(keyword));
+                this.tampilkanHasilPencarian(hasil, 'Linear Search');
+            }
+            
+            cariBinary() {
+                const nimCari = this.elements.searchInput.value;
+                if (!nimCari) { alert('Masukkan NIM.'); return; }
+                const sortedData = [...this.daftarMahasiswa].sort((a, b) => parseInt(a.nim, 10) - parseInt(b.nim, 10));
+                let low = 0, high = sortedData.length - 1, hasil = null;
+                while (low <= high) {
+                    const mid = Math.floor((low + high) / 2);
+                    if (sortedData[mid].nim === nimCari) { hasil = sortedData[mid]; break; }
+                    else if (parseInt(sortedData[mid].nim, 10) < parseInt(nimCari, 10)) low = mid + 1;
+                    else high = mid - 1;
+                }
+                this.tampilkanHasilPencarian(hasil ? [hasil] : [], 'Binary Search');
+            }
+
+            tampilkanHasilPencarian(hasil, metode) {
+                if (hasil.length > 0) { const resultHtml = hasil.map(m => `<p>${m.getInfo()}</p>`).join(''); this.elements.searchResults.innerHTML = `<h3>Hasil Pencarian (${metode}):</h3>${resultHtml}`; }
+                else { this.elements.searchResults.innerHTML = `<h3>Hasil Pencarian (${metode}):</h3><p>Data tidak ditemukan.</p>`; }
+            }
+
+            // --- FITUR PENGURUTAN ---
+            handleSortSubmit(event) {
+                event.preventDefault();
+                const field = document.getElementById('sort-field').value;
+                const methodOrder = document.getElementById('sort-method').value;
+                if (!field || !methodOrder) { alert('Silakan pilih bidang dan metode pengurutan.'); return; }
+                const [algorithm, order] = methodOrder.split('-');
+                if (algorithm === 'bubble') this.urutkanBubble(field, order);
+                else if (algorithm === 'merge') this.urutkanMerge(field, order);
+            }
+
+            urutkanBubble(field, order) {
+                const arr = [...this.daftarMahasiswa];
+                const n = arr.length;
+                for (let i = 0; i < n - 1; i++) {
+                    for (let j = 0; j < n - i - 1; j++) {
+                        const val1 = arr[j][field];
+                        const val2 = arr[j+1][field];
+                        let comparison = 0;
+                        if (field === 'nim') comparison = parseInt(val1, 10) - parseInt(val2, 10);
+                        else comparison = val1.localeCompare(val2);
+                        if (order === 'asc' && comparison > 0) [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+                        else if (order === 'desc' && comparison < 0) [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+                    }
+                }
+                this.daftarMahasiswa = arr; this.saveData();
+                const fieldText = field === 'nim' ? 'NIM' : 'Nama';
+                this.elements.sortMessage.textContent = `Data berhasil diurutkan menggunakan Bubble Sort (${order === 'asc' ? 'Ascending' : 'Descending'}) berdasarkan ${fieldText}.`;
+                this.render();
+            }
+
+            urutkanMerge(field, order) {
+                this.daftarMahasiswa = this.mergeSort(this.daftarMahasiswa, field, order);
+                this.saveData();
+                const fieldText = field === 'nim' ? 'NIM' : 'Nama';
+                this.elements.sortMessage.textContent = `Data berhasil diurutkan menggunakan Merge Sort (${order === 'asc' ? 'Ascending' : 'Descending'}) berdasarkan ${fieldText}.`;
+                this.render();
+            }
+            
+            mergeSort(arr, field, order) {
+                if (arr.length <= 1) return arr;
+                const middle = Math.floor(arr.length / 2);
+                const left = arr.slice(0, middle), right = arr.slice(middle);
+                return this.merge(this.mergeSort(left, field, order), this.mergeSort(right, field, order), field, order);
+            }
+
+            merge(left, right, field, order) {
+                let resultArray = [], leftIndex = 0, rightIndex = 0;
+                while (leftIndex < left.length && rightIndex < right.length) {
+                    const val1 = left[leftIndex][field];
+                    const val2 = right[rightIndex][field];
+                    let comparison = 0;
+                    if (field === 'nim') comparison = parseInt(val1, 10) - parseInt(val2, 10);
+                    else comparison = val1.localeCompare(val2);
+                    if (order === 'asc' && comparison < 0) { resultArray.push(left[leftIndex]); leftIndex++; }
+                    else if (order === 'desc' && comparison > 0) { resultArray.push(left[leftIndex]); leftIndex++; }
+                    else { resultArray.push(right[rightIndex]); rightIndex++; }
+                }
+                return resultArray.concat(left.slice(leftIndex)).concat(right.slice(rightIndex));
+            }
+        }
+
+        // --- Jalankan Aplikasi ---
+        new ManajemenMahasiswaApp();
+    });
+    </script>
+</body>
+</html>
